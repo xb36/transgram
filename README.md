@@ -6,6 +6,7 @@ Note that this is an early version and may (will) include bugs. Please report an
 ## Prerequisits
 - OS: Linux (preferrably debian) 
 - Software:
+- 	- node20+
 	- ffmpeg (for fetching file information)
 
 Note that transgram was designed to run on HTTP behind a HTTPS reverse proxy.
