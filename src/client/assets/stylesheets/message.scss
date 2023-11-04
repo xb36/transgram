@@ -1,0 +1,194 @@
+li.message-container {
+
+	margin: 0.9em !important;
+	padding: 0;
+
+	border-radius: 1.3em;
+	box-shadow: 0px 0.05em 0.68em -0.36em black;
+
+	color: rgba(0, 0, 0, 0.87);
+
+	list-style-type: none;
+
+	&.customer {
+		background-color: #c5d7d5;
+		margin-left: 36px !important;
+		border-bottom-right-radius: 0;
+	}
+
+	&.admin {
+		background-color: white;
+		margin-right: 36px !important;
+		border-top-left-radius: 0;
+	}
+
+	&.system {
+		box-shadow: none;
+		p.sender {
+			display: none;
+		}
+		p.time {display: none;}
+		font-style: italic;
+		color: rgba(0, 0, 0, 0.67);
+	}
+
+	p.sender {
+		font-weight: bold;
+		padding: 0.4em 1em 0.2em 1em;
+		
+	}
+
+
+	div.message {
+
+
+		&.text {
+			
+			padding: 0.1em 1.1em 0.5em 1.1em;
+			
+		}
+
+		&.photo {
+
+
+			img.photo {
+				display: block;
+				width: 100%;
+				height: 13em;
+				bottom: 0;
+
+				margin: 0;
+				cursor: pointer;
+
+				background-size: cover;
+				background-repeat: no-repeat;
+				background-position: center;
+				border-radius: 1.3em;
+				border-top-left-radius: 0;
+				border-top-right-radius: 0;
+			}
+
+
+		}
+
+		&.video {
+
+			video.video {
+				width: 100%;
+				max-height:100% !important;
+				display: block;
+				border-radius: 1.3em;
+				border-top-left-radius: 0;
+				border-top-right-radius: 0;
+
+			}
+
+		}
+
+		&.audio {
+
+	
+			padding: 0.5em 2em 1em;
+
+			audio {
+				display: none;
+			}
+
+			div.ctrl-container {
+				display: flex;
+				align-items: center;
+				justify-content: space-around;
+
+				div.button-container {
+
+					display: flex;
+					align-items: center;
+
+					svg.play-button, 
+					svg.replay-button, 
+					svg.pause-button {
+						width: 1.36em;
+						height: 1.36em;
+						fill: #005e53;
+					}
+				}
+
+				div.position-indicator {
+
+					padding: 0.5em 0;
+
+					display: flex;
+					position: relative;
+					align-items: center;
+
+					width: calc(100% - 1.36em);
+					margin: 1em;
+
+					div.track,
+					div.progress,
+					div.indicator {
+						position: absolute;
+					}
+
+					div.track, div.progress {
+						height: 0.2em;
+						left: 0;
+						width: 100%;
+					}
+					div.track {
+						background-color: rgba(0, 0, 0, 0.36);
+					}
+
+					div.progress {
+						background-color: #005e53;
+						// debug
+					}
+
+					div.indicator {
+						width: 1em;
+						height: 1em;
+						background-color: #005e53;
+						border-radius: 100%;
+
+						position: absolute;
+					}
+				}
+
+				p.time-display {
+					font-size: 0.8rem;
+				}
+			}
+
+			
+
+		}
+
+		&.document {
+
+			display: flex;
+			padding: 1em;
+
+			strong {
+				line-break: anywhere;
+			}
+
+			svg {
+				fill: rgba(0,0,0,0.87);
+				width: 4.4em;
+			}
+
+			a, a:visited {
+				color: #005e53;
+			}
+			svg, a {
+				cursor: pointer;
+			}
+		
+
+		}
+
+
+	}
+
+
+}

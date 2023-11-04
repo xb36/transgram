@@ -1,0 +1,193 @@
+div.transgram-chat {
+
+	* {
+		box-sizing: border-box;
+		margin: 0;
+		padding: 0;
+		line-height: 1.36rem;
+		font-size: 1rem;
+		text-align: left;
+	}
+
+	visibility: visible;
+
+	position: fixed;
+	top: 0.2em;
+	bottom: 0.2em;
+	left:0.2em;
+	right:0.2em;
+
+	z-index: 999;
+
+	box-shadow: 2px 2px 20px 1px black;
+
+
+	display: flex;
+	flex-direction: column;
+
+	background-color: white;
+ 
+
+	// border: 2px solid red;
+
+	&.hidden {
+		visibility: hidden;
+	}	
+
+	div.header{
+
+		position: relative;
+		background-color: #005e53;//#ee8224;
+
+		//border-bottom-right-radius: 50px;
+
+		box-shadow: 0 0 3px 0px black;
+
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		padding: 1rem;
+
+		svg.export {
+			width: 1.5em;
+			height: 1.5em;
+			fill: white;
+			cursor: pointer;
+		}
+
+		p.headline {
+			//position: absolute;
+			//right: 0;
+			//left: 0;
+			text-align: center;
+			color: white;
+			font-weight: bold;
+			flex-grow: 1;
+			padding-right: 10px;
+		}
+
+		div.close-button {
+			&::after {
+				content: "\00d7";
+			}
+			font-size: 18pt;
+			color: white;
+			line-height: 0pt;
+			cursor: pointer;
+		}
+	}
+
+	div.messages-wrapper {
+
+		flex-grow: 1;
+		overflow: hidden;
+
+		position: relative;
+
+		width: 100%;
+
+		background-color: #d2e0de;
+
+
+		ol.messages-container {
+
+			position: relative;
+			height: 100%;
+			overflow-y: scroll;
+			overflow-x: hidden;
+
+			/* message styles in message.scss */
+
+			/* patience indicator styles in auto_responder.scss */
+
+		}
+
+
+
+
+	}
+
+	div.input-wrapper {
+
+		position: relative;
+		display: flex;
+		flex-direction: row;
+		align-items: center;
+		width: 100%;
+
+		padding: 0 1em 8px 0.8em;
+
+		background-color: white;
+		border-top: 2px solid #98928d;
+
+		textarea.chat-input {
+			background-color: white;
+			color: rgba(0, 0, 0, 0.87);
+			word-wrap: break-word;
+			line-height: 19px;
+			font-size: 16px;
+			width: 100%;
+
+			order: 2;
+
+			resize: none;
+
+			margin: 0.5em 0.8em 0.5em 0.5em;
+
+			outline: none;
+			border:none;
+
+			&:focus-within {
+				border-color: #005e53;//#ee8224;
+			}
+
+			&.has-input + svg.submit {
+				filter: invert(24%) sepia(82%) saturate(842%) hue-rotate(134deg) brightness(95%) contrast(101%);
+			}
+			&.has-input.mobile + svg.submit {
+				opacity: 1;
+				z-index: 1;
+			}
+			&.mobile + svg.submit {
+				opacity: 0;
+				z-index: -1;
+			}
+
+		}
+
+		svg.submit {
+
+			transition: opacity 0.2s ease;
+
+			order: 3;
+						//position: absolute;
+			width: 2em;
+			height: 2em;
+
+			cursor: pointer;
+
+			display: flex;
+			align-items: center;
+			justify-content: center;
+
+			filter: invert(64%) sepia(3%) saturate(817%) hue-rotate(345deg) brightness(93%) contrast(79%);
+		}
+
+		/* media upload styles in MediaUpload.scss */
+
+	}
+
+}
+
+@media screen and (min-width: 720px) and (min-height: 720px) {
+	div.transgram-chat {
+		left: auto;
+		top: auto;
+		right: 0.5em;
+		bottom: 0.5em;
+		width: 25em;
+		max-width: calc(100vw - 1em);
+		height: 50em;
+		max-height: calc(100vh - 1em);
+	}
+}

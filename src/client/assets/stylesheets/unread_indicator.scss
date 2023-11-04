@@ -1,0 +1,53 @@
+div.unread-indicator {
+	position: absolute;
+	bottom: 1em;
+	right: 1em;
+	width: 2.3em;
+	height: 2.3em;
+	border-radius: 100%;
+	background-color: #005e53;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	cursor: pointer;
+
+	animation: 0.5s normal forwards blend-in;
+
+	p.down-arrow {
+		transform: rotateZ(-45deg);
+		color: white;
+	}
+
+	p.unread-count {
+		right: 0;
+		top: -0.55em;
+	}
+}
+
+@keyframes blend-in {
+	0% {
+		opacity: 0;
+	}
+	50% {
+		opacity: 0;
+	}
+	100% {
+		opacity: 1;
+	}
+}
+
+p.unread-count {
+	position: absolute;
+	background-color: red;
+	color: white;
+	border: 1px solid white;
+	border-radius: 100%;
+	width: 1.36em;
+	height: 1.36em;
+	padding: 0.2em;
+	font-size: 0.8rem;
+
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}

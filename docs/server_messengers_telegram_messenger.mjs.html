@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: server/messengers/telegram_messenger.mjs</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: server/messengers/telegram_messenger.mjs</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import Cookie from "../controllers/cookie_controller.mjs"
+import {SystemLogger as Logger} from "../../shared/libs/Logger.mjs"
+import API from "../libs/TelegramAPI.mjs"
+import {get_download_url} from "../helpers/url_helper.mjs"
+
+/**
+ * @class
+ * @hideconstructor
+ */
+class TelegramMessenger {
+
+
+	/**
+	 * redirects incoming customer message to telegram
+	 * and returns the retrieved message_id to the customer
+	 *
+	 * @param   {Object}   oData object containing customer cookie and message
+	 * @param   {Function} cb    socket callback
+	 *
+	 * @returns {undefined}
+	 */
+	static async handleCustomerMessage (oData, cb) {
+		const cookie = Cookie.read(oData.cookie)
+
+		Logger.debug(oData)
+
+		const payload = `&lt;pre style="bg-color:red">${cookie.name}&lt;/pre>\n${oData.message}`
+
+		const response = await API.send(payload, cookie.room)
+		if (response.ok)
+			cb({
+				ok: true,
+				id: response.result.message_id
+
+			})
+		else
+			cb({
+				ok: false
+			})
+	}
+
+	/**
+	 * Sends setup instructions upon channel creation
+	 *
+	 * @returns {undefined} 
+	 */
+	static async handleChannelCreation(message) {
+		this.send_welcome_message(message.chat_id, "(To use the receive-confirmation feature, make sure I have the 'can_edit_messages' priviledge!)")
+	}
+
+	/**
+	 * Sends setup instructions upon group creation
+	 *
+	 * @returns {undefined} 
+	 */	
+	static async handleGroupCreation(message) {
+		this.send_welcome_message(message.chat_id, "Hint: If you want to get serious, read about 'Transgram Bot in Forums' on our github page!")
+	}
+
+	/**
+	 * Sends setup instructions upon forum creation
+	 *
+	 * @returns {undefined} 
+	 */	
+	static async handleForumCreation(message) {
+		this.send_welcome_message(message.chat_id, "Important: To create topics, you need to grant me administrator rights with the 'manage topic' privilege!")
+	}
+
+	/**
+	 * Sends welcome message to the newly created group/channel/forum.
+	 * On error, a second attempt is started after 5 seconds
+	 *
+	 * @param   {int}    iChatId       id of the new chat
+	 * @param   {String} sInstructions a specific instruction string for the type of chat created
+	 * @param   {bool}   isRetry       indicates whether this is a retry
+	 *
+	 * @returns {undefined}
+	 */
+	static async send_welcome_message(iChatId, sInstructions, isRetry=false) {
+		const payload = `&lt;pre>Transgram Bot&lt;/pre>`+
+	        `&lt;strong>Welcome to transgram.&lt;/strong>\nYour transgram chat_id: &lt;strong>${iChatId}&lt;/strong>\n`+
+	        `Please setup this id on the transgram server to make me function properly.\n\n`+
+	        `${sInstructions}\n\n` +
+	        "Now, let's chat!"
+	    const result = await API.send(payload, null, {chat_id: iChatId})
+		if (!result.ok) {
+			if (isRetry) {
+				Logger.error("Failed to send instructions")
+				return
+			}
+			Logger.warning("Could not send instructions. Will retry in 5 seconds...")
+			setTimeout(()=>{TelegramMessenger.send_welcome_message(iChatId, sInstructions, true)}, 5000)
+		}
+	}
+
+	/**
+	 * Send a message to telegram
+	 *
+	 * @param   {String} sMessage the message
+	 * @param   {Object} oArgs    optional arguments
+	 *
+	 * @returns {undefined}
+	 */
+	/*static async send(sMessage, oArgs={}) {
+		API.send(sMessage, oArgs)
+	}*/
+
+
+	static async sendFile(sCookie, oFileUpload) {
+		const cookie = Cookie.read(sCookie)
+		
+		let response = null
+		
+		const url = get_download_url(oFileUpload.name)
+
+		switch (oFileUpload.type.split("/")[0]) {
+		case "audio":
+			response = await API.sendAudio({url}, cookie.room)
+			if (!response.ok)
+				response = await API.sendDocument({url}, cookie.room)
+			break;
+		case "video":
+			response = await API.sendVideo({url}, cookie.room)
+			if (!response.ok)
+				response = await API.sendDocument({url}, cookie.room)
+			break;
+		case "image":
+			response = await API.sendPhoto({url}, cookie.room)
+			if (!response.ok)
+				response = await API.sendDocument({url}, cookie.room)
+			break;
+		default:
+			response = await API.sendDocument({url: get_download_url(oFileUpload.name)}, cookie.room)
+			break;
+		}
+		if (response.error_code === 400) API.send(`Workaround for 400 Error: ${url}`, cookie.room)
+
+	}
+
+}
+
+export default TelegramMessenger</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="CommandController.html">CommandController</a></li><li><a href="Cryptor.html">Cryptor</a></li><li><a href="CustomerController.html">CustomerController</a></li><li><a href="CustomerMessenger.html">CustomerMessenger</a></li><li><a href="FileReceiver.html">FileReceiver</a></li><li><a href="Message.html">Message</a></li><li><a href="SocketListener.html">SocketListener</a></li><li><a href="Socketserver.html">Socketserver</a></li><li><a href="TelegramAPI.html">TelegramAPI</a></li><li><a href="TelegramListener.html">TelegramListener</a></li><li><a href="TelegramMessenger.html">TelegramMessenger</a></li><li><a href="WebhookMessage.html">WebhookMessage</a></li><li><a href="Webserver.html">Webserver</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Tue May 30 2023 19:54:52 GMT+0200 (Central European Summer Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

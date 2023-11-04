@@ -1,0 +1,26 @@
+div.placeholder {
+
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 1em;
+
+	svg {
+		width: 3.6em;
+		height: 3.6em;
+
+		fill: #005e53;
+		opacity: 0.56;
+
+		animation: rotate-placeholder 4s infinite linear;
+	}
+}
+
+@keyframes rotate-placeholder {
+	0% {
+		transform: rotate(0deg);
+	}
+	100% {
+		transform: rotate(360deg);
+	}
+}

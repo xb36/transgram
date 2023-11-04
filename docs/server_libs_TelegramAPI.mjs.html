@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: server/libs/TelegramAPI.mjs</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: server/libs/TelegramAPI.mjs</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import config from "../server_configuration.mjs"
+import {SystemLogger as Logger} from "../../shared/libs/Logger.mjs"
+import fs from "node:fs"
+import https from "https"
+import Cryptor from "./Cryptor.mjs"
+import path from "path"
+import {get_download_url} from "../helpers/url_helper.mjs"
+
+
+/**
+ * @class
+ * @hideconstructor
+ */
+class TelegramAPI {
+	static BASE_URL = 'https://api.telegram.org/bot'
+	static HEADERS = {
+	            Accept: "application/json",
+	            "Content-Type": "application/json;charset=UTF-8",
+	        }
+	static DEFAULT_OPTIONS = {
+		method: "POST",
+		headers: this.HEADERS
+	}
+	static _URL(path) {
+		return this.BASE_URL + process.env.TELEGRAM_API_TOKEN + "/" + path
+	}
+
+	static send(message, topic, parameter={}) {
+
+		const url = this._URL("sendMessage")
+
+		const body =  {...{chat_id: config.transgram_chat_id, 
+							text: message, 
+							message_thread_id: topic, 
+							parse_mode: "html"}, 
+							...parameter}
+
+	    const options = {
+	        body: JSON.stringify(body)
+	    };
+	    
+	    return this._transmit(url, options)
+	}
+
+	static edit(parameter={}) {
+
+		const url = this._URL("editMessageText")
+		const body = {...{chat_id: config.transgram_chat_id, parse_mode: "html"}, ...parameter}
+
+		Logger.debug(`TelegramAPI.edit: Going to edit message #${parameter.message_id}`)
+		Logger.error(body)
+
+		const options = {
+			body: JSON.stringify(body)
+		}
+
+		return this._transmit(url, options)
+	}
+
+	static createTopic(name, parameter={}, chat_id=config.transgram_chat_id) {
+		Logger.debug(`TelegramAPI.createTopic`)
+
+		const url = this._URL("createForumTopic")
+
+		const options = {
+			body: JSON.stringify({...{
+				"chat_id": chat_id,
+				"name": name
+			}, ...parameter})
+		}
+
+		return this._transmit(url, options)		
+	}
+
+	static editTopic(topic_id, parameter, chat_id=config.transgram_chat_id) {
+		Logger.debug(`Edit topic #${topic_id}`)
+
+		const url = this._URL("editForumTopic")
+
+		const options = {
+			body: JSON.stringify({...{
+				"chat_id": chat_id,
+				"message_thread_id": topic_id
+			}, ...parameter})
+		}
+
+		return this._transmit(url, options)
+	}
+
+	static closeTopic(topic_id, chat_id=config.transgram_chat_id) {
+		Logger.debug(`Closing topic #${topic_id}`)
+
+		const url = this._URL("closeForumTopic")
+
+		const options = {
+			body: JSON.stringify({
+				"chat_id": chat_id,
+				"message_thread_id": topic_id
+			})
+		}
+
+		return this._transmit(url, options)
+	}
+
+	static deleteTopic(iTopicId, iChatId=config.transgram_chat_id){
+		Logger.debug(`Deleting topic #${iTopicId}`)
+
+		const url = this._URL("deleteForumTopic")
+
+		const options = {
+			body: JSON.stringify({
+				"chat_id": iChatId,
+				"message_thread_id": iTopicId
+			})
+
+		}
+		return this._transmit(url, options)
+	}
+
+    
+    static sendVideo (doc, parameter={}, chat_id=config.transgram_chat_id){
+    	const url = this._URL("sendVideo")
+
+    	const options = {
+    		body: JSON.stringify({...{
+    			"chat_id": chat_id,
+    			"video": doc.url
+    		}, ...parameter})
+    	}
+
+    	Logger.debug(`Transmitting: ${doc.url}`)
+    	return this._transmit(url, options)
+    }
+
+    static sendAudio (doc, topic, parameter={}, chat_id=config.transgram_chat_id){
+    	const url = this._URL("sendAudio")
+
+    	const options = {
+    		body: JSON.stringify({...{
+    			"chat_id": chat_id,
+    			"audio": doc.url,
+    			message_thread_id: topic
+    		}, ...parameter})
+    	}
+
+    	Logger.debug(`Transmitting: ${doc.url}`)
+    	return this._transmit(url, options)
+    }
+
+    static sendPhoto (doc, topic, parameter={}, chat_id=config.transgram_chat_id) {
+    	const url = this._URL("sendPhoto")
+
+    	const options = {
+    		body: JSON.stringify({...{
+    			"chat_id": chat_id,
+    			"photo": doc.url,
+    			message_thread_id: topic
+    		}, ...parameter})
+    	}
+
+    	Logger.debug(`Transmitting: ${doc.url}`)
+    	return this._transmit(url, options)    	
+    }
+    
+    static sendDocument (doc, topic, parameter={}, chat_id=config.transgram_chat_id) {
+    	const url = this._URL("sendDocument")
+
+    	const options = {
+    		body: JSON.stringify({...{
+    			"chat_id": chat_id,
+    			"document": doc.url,
+    			message_thread_id: topic
+    		}, ...parameter})
+    	}
+
+    	Logger.debug(`Transmitting: ${doc.url}`)
+    	return this._transmit(url, options)  
+    } 
+
+    static async getFile(file_id) {
+    	const url = this._URL("getFile")+`?file_id=${file_id}`
+    	const options = {
+    		method: "GET"
+    	}
+    	return this._transmit(url, options)
+    }
+
+    /* downloads the file to local uploads path and returns url */
+	static async fetchFile(file) {
+		Logger.debug("Fetching file from Telegram server")
+		// get file path on TG Server
+		let response = await this.getFile(file.file_id)
+		if (!response.ok) {
+			Logger.error(`Could not fetch file: (${response.error_code}) ${response.description}`)
+			return
+		}
+		Logger.debug(response)
+		// fetch file
+		const url = `https://api.telegram.org/file/bot`+
+			`${process.env.TELEGRAM_API_TOKEN}/${response.result.file_path}`
+		Logger.debug(`fetching file from ${url}`)
+		
+		const buffer = await new Promise((resolve, reject) => {
+			https.get(url, (res) => {
+				const body = []
+				res.on("data", chunk => {
+					body.push(chunk)
+				})
+				.on("end", () => {
+					resolve(Buffer.concat(body))
+				})
+			})
+		})
+
+		if (!buffer.length) {
+			Logger.error("Buffer is empty")
+			return
+		}
+		// calculate sha256
+		const sha = await Cryptor.sha256(buffer)
+		Logger.debug(`sha: ${sha}`)
+		// save file
+		const filename = sha.slice(0, 32) + `-${url.split("/").pop()}`
+		const pathname = path.join(
+			config.uploads_directory,
+			 filename)
+		Logger.debug(`Going to write file: ${pathname}`)
+		fs.writeFileSync(pathname, buffer)
+		// return new url
+		const result = get_download_url(filename)
+		Logger.debug(`DL Path: ${result}`)
+		return result
+
+	}
+
+	static _transmit(url, options) {
+
+		Logger.debug("Sending Request...")
+
+		options = {...this.DEFAULT_OPTIONS, ...options}
+
+		Logger.debug(`Transmit ${JSON.stringify(options)} to ${url}`)
+
+		return fetch(url, options)
+	        .then((response) => {
+	            return response.json()
+	        })
+	        .then((data) => {
+	          	Logger.debug("Response data from API:")
+	            Logger.debug(data)
+	            return data
+	        }
+	    );
+	}
+
+}
+
+export default TelegramAPI</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Classes</h3><ul><li><a href="CommandController.html">CommandController</a></li><li><a href="Cryptor.html">Cryptor</a></li><li><a href="CustomerController.html">CustomerController</a></li><li><a href="CustomerMessenger.html">CustomerMessenger</a></li><li><a href="FileReceiver.html">FileReceiver</a></li><li><a href="Message.html">Message</a></li><li><a href="SocketListener.html">SocketListener</a></li><li><a href="Socketserver.html">Socketserver</a></li><li><a href="TelegramAPI.html">TelegramAPI</a></li><li><a href="TelegramListener.html">TelegramListener</a></li><li><a href="TelegramMessenger.html">TelegramMessenger</a></li><li><a href="WebhookMessage.html">WebhookMessage</a></li><li><a href="Webserver.html">Webserver</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 4.0.2</a> on Tue May 30 2023 19:54:52 GMT+0200 (Central European Summer Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
