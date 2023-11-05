@@ -102,6 +102,10 @@ This error contains an additional key `max_size` that indicates the maximum allo
 #### 507: Insufficient storage
 Check your storage.
 
+
+## Generating JSDoc Documentation
+For generating documentation from the JSDoc tags, you can run `npm run doc`. This will generate the files as defined in `.jsdoc.json`
+
 ## Known bugs
 Im some cases, the Telegram API returns 403 (forbidden) upon creation of a new channel, stating that the bot is not a member of the channel chat (even though it is). In this case, the instructions (including the chat id) are not sent. Transgram attemps one retry after 5 seconds, which in most cases also fails. A respective log message will be printed on the server logs. There is no known fix and the cause is unknown at the moment. Just create another channel, until it works.. 
 
