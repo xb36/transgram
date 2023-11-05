@@ -17,6 +17,9 @@ Note that this is an early version and may (will) include bugs. Please report an
 ### Telegram Bot Setup
 First thing you need is a [telegram bot](https://core.telegram.org/bots). You can follow these simple steps:
 1. Search for "BotFather" in your Telegram app. Make sure you select the correct one, with a "verified" symbol, as there are many fake duplicates that try to steal your data.
+
+   ![Image showcasing telegram search](https://github.com/xb36/transgram/blob/main/BotFather_screenshot.png?raw=true)
+
 2. Enter `/start` (or click on "START")
 3. Enter `/newbot` to create a new Bot
 	3.1. Enter any name for your bot
@@ -44,6 +47,8 @@ Install dependencies and package the build to start it like so:
 `npm run start`
 
 If everything worked, you should see a message stating that the server is listening on the specified port.
+
+![Image showing success message](https://github.com/xb36/transgram/blob/main/run_start_screenshot.png?raw=true)
 
 ### Reverse Proxy Setup
 
