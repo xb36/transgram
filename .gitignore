@@ -24,10 +24,7 @@ dist-ssr
 *.sw?
 
 .env
-docs/*
-!docs/.gitkeep
 .tern-*
 package-lock.json
 
-BotFather_screenshot.png
-run_start_screenshot.png
+*.png

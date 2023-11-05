@@ -1,6 +1,8 @@
 # About
 Transgram is a Telegram Chat Widget for your Homepage! It allows you to forward messages from the widget to your Telegram App and vice-versa, thus enabling you to communicate with your website visitors "on the fly" (or on the walk, that is).
 
+![](https://github.com/xb36/transgram/blob/main/preview.gif?raw=true)
+
 Note that this is an early version and may (will) include bugs. Please report any issue you have (and feel welcome to create a pull request) as this helps alot with maintaining the code. Please read this document very carefully.
 
 ## Installation
@@ -30,7 +32,7 @@ First thing you need is a [telegram bot](https://core.telegram.org/bots). You ca
 
 Clone this repository to any location on your server.
 
-`$``git clone https://github.com/xb36/transgram.git`
+`git clone https://github.com/xb36/transgram.git`
 
 edit `.env-example` and rename to `.env`
 
@@ -82,6 +84,80 @@ The last step that is required is to retrieve the Transgram Chat ID and set the 
 3. Add your transgram_chat_id to `server_configuration.mjs` and restart the server.
 
 That is it, really!
+
+### Running Background Process 
+
+#### Using PM2
+
+Transgram installes pm2, a node process manager. It is an easy way to start and stop the app, e.g. using a command like:
+
+__Note: The following commands may require you to be in the transgram root folder (e.g. `/var/www/transgram`). Also, it is highly recommended to run the server as an unprivileged user!__
+
+Starting the service:
+
+`node_modules/.bin/pm2 start npm -- start`
+
+List current processes:
+
+`node_modules/.bin/pm2 list`
+
+Stop a process:
+
+`node_modules/.bin/pm2 stop <id>`
+
+Show STDOUT:
+
+`node_modules/.bin/pm2 log <id>`
+
+You may also use the `pm2 startup` command to run commands on system boot. For more information, see the pm2 documentation on [persistent application](https://pm2.keymetrics.io/docs/usage/startup/). pm2 comes with some grat features for monitoring as well, and definetly is worth a look.
+
+#### Using Systemd
+
+If you prefer a systemd service, create (as root) the file `transgram.service` in `/etc/systemd/system/`. The following example demonstrates how this file could look like (adjust values as required):
+
+```
+[Unit]
+Description=Transgram Server
+
+[Service]
+ExecStart=/home/transgram/.nvm/versions/node/v20.2.0/bin/npm run start # use full path to node executable
+Restart=always
+User=transgram
+# Note Debian/Ubuntu uses 'nogroup', RHEL/Fedora uses 'nobody'
+Group=nogroup
+WorkingDirectory=/var/www/transgram
+
+[Install]
+WantedBy=multi-user.target
+```  
+
+Now, start the service. Run (as root):
+
+`systemctl transgram start`
+
+If everything works as expected, you may enable the service upon system boot:
+
+`systemctl transgram enable`
+
+
+## Message Types
+
+### Message Type Support
+
+At the moment, the following types of media is (mostly) supported:
+- text message (including emoticons)
+- image
+- video
+- audio
+
+The following type of media is not supported at the moment:
+- voice message
+
+### Security Implications
+
+The uploaded files are stored on the Transgram server. Note that this improves privacy as opposed to fetching the file from the Telegram servers every time the client (re)connects. It as well allows deletion of files on one side without affecting the other.
+
+Note that there is no authorization mechanism in place other than the filename itself, which is preceeded by a 16 digit alphanumerical part of the sha256 sum of the file, and contains the filename as saved on Telegram (e.g. "file-36") as well as the file ending (e.g. ".mp4"). This allows your support clients to share files, e.g. by sending the link to a file via Email, and protects files from visitors that do not know the filename. However, it _theoretically_ allows attackers to brute-force file names. Given 26 letters and 10 numbers, the likelyhood for a random guess is around n/36^16, with n being the number of stored files of a given type, given the Telegram filename and type is known to the attacker. Say you have 1 Million PNG images stored on your server, the likelyhood to find one of them in a random guess would then be around 0.0000000000000000126%, which is a percentage with 16 zeros after the dot and considered "basically zero". However, just be aware that files are not "private" by any means, and you may as well want to raise awareness on the clientside about this fact.
 
 ## Chat Types
 ### private chat
