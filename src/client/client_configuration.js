@@ -9,13 +9,13 @@ const client_configuration = {...{
     closed_widget_label: "Chat", // will soon be deprecated in favor for chat_header_text
     open_widget_label: "Close",
     // this is a required parameter at the embedding host
-    // transgram_host: "transgram.running.digital:3333",
+    // transgram_host: "https://<YOUR_DOMAIN>",
     chat_placeholder: "Your message..",
     chat_unavailable: "Sorry, our chat is temporarily unavailable!",
     chat_scroll_breakpoint: 500, /* dont scroll to bottom after customer scrolled up this many pixels. Recommended to set to ~chat-height */
     chat_header_text: "Support Chat",
     // todo: cookie expiration is kind of obsolete now, remove or change this
-    cookie_expiration_time: 6, /* expire chat session after X hours if inactivity (default: 6) */
+    cookie_expiration_time: 6, /* expire chat session after X hours of inactivity (default: 6) */
     /* you will likely (*hopefully*) never need this. Still, it is there, just in case */
     //cookie_tampering_security_warning: "HIGH SEVERITY! Your chat session cookie was tampered with. This could mean that somebody is trying to spy on your messages. Please do not try to change the cookie data, as it verifies and secures your identity, and changes will break the functiionality. We will now renew your session..However, this incident was logged.",
     customer_pronoun: "You", // customer chat name

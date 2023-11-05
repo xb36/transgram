@@ -4,7 +4,8 @@ import { dirname } from 'path';
 const server_configuration = {
 	allow_broadcasting: false, /* Not implemented yet - anyway. leave disabled unless you really need it. Bad things can happen */
 	// todo: let the client (securely!) determin the chat ID
-	transgram_chat_id: process.env.NODE_ENV === "production" ? -1001953499908 : -1001815140021,
+	// transgram_chat_id: process.env.NODE_ENV === "production" ? -1001953499908 : -1001815140021,
+	transgram_chat_id: 0/*<YOUR_TRANSGRAM_CHAT_ID>*/,
 	message_transmission_error: "Something went wrong. Your message could not be delivered. Please try again in a moment.",
 	file_integrity_check_error: "The integrity of the uploaded file could not be validated",
 	// path on disk - make sure it exists and that node has permissions to read it if you change this
