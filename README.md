@@ -38,7 +38,7 @@ edit `.env-example` and rename to `.env`
 
 CAUTION: Transgram uses a custom built dotenv-like parser. Make sure to read the .env file comments __very carefully__ and set the appropriate values. This is also where you will copy the Telegram HTTP API token generated in the previous step.
 
-Before you can build the package, you may want to take a look at `./src/client/client_configuration.js` as well as `./src/server/server_configuration.mjs` and change any default values. If you change any values in this file later, you will need to re-build transgram with the commands below. Note that you will also be able to change the client configuration options from the embedding client without the need to rebuild. The server configuraiton options can only be changed in the respective file, however you will not need to rebuild re project, just restart the server.
+Before you can build the package, you may want to take a look at `./src/client/client_configuration.js` as well as `./src/server/server_configuration.mjs` and change any default values. If you change any values in this file later, you will need to re-build transgram with the commands below. Note that you will also be able to change the client configuration options from the embedding client without the need to rebuild. The server configuraiton options can only be changed in the respective file, however you will not need to rebuild the project, just restart the server.
 
 Install dependencies and package the build to start it like so:
 
@@ -141,7 +141,7 @@ If everything works as expected, you may enable the service upon system boot:
 
 ## Basic Usage
 
-In groups and channels, you will need to use the reply function to answer incoming chat messages. This way, you can still have internal conversations in your group without the customer(s). In Supergroups, you can use the `/topic [name]` (or `/thread [name]`) command as an reply to spawn a new thread in which you can chat with the respective customer "normally", without the need of using the reply function. You can `/close` a thread, or use the `/topic` (or `/thread`) command again to create a new thread and close the old one (this may be useful whenever the topic of your conversation changes and you want to keep an overview).
+In groups and channels, you will need to use the reply function to answer incoming chat messages. This way, you can still have internal conversations in your group apart from ongoing customer chats. In Supergroups, you can use the `/topic [name]` (or `/thread [name]`) command via a reply to spawn a new thread in which you can chat with the respective customer "normally", without the need of using the reply function. You can use the `/topic` (or `/thread`) command again to create a new thread and close the old one (this may be useful whenever the topic of your conversation changes and you want to keep an overview).
 
 ## Message Types
 
