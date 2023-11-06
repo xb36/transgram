@@ -1,7 +1,7 @@
 # About
 Transgram is a Telegram Chat Widget for your Homepage! It allows you to forward messages from the widget to your Telegram App and vice-versa, thus enabling you to communicate with your website visitors "on the fly" (or on the walk, that is).
 
-![](https://github.com/xb36/transgram/blob/main/preview.gif?raw=true)
+![Gif showcasing the app](https://github.com/xb36/transgram/blob/main/showcase.gif?raw=true)
 
 Note that this is an early version and may (will) include bugs. Please report any issue you have (and feel welcome to create a pull request) as this helps alot with maintaining the code. Please read this document very carefully.
 
@@ -20,7 +20,7 @@ Note that this is an early version and may (will) include bugs. Please report an
 First thing you need is a [telegram bot](https://core.telegram.org/bots). You can follow these simple steps:
 1. Search for "BotFather" in your Telegram app. Make sure you select the correct one, with a "verified" symbol, as there are many fake duplicates that try to steal your data.
 
-   ![Image showcasing telegram search](https://github.com/xb36/transgram/blob/main/BotFather_screenshot.png?raw=true)
+   ![Image showing telegram search](https://github.com/xb36/transgram/blob/main/BotFather_screenshot.png?raw=true)
 
 2. Enter `/start` (or click on "START")
 3. Enter `/newbot` to create a new Bot
@@ -139,6 +139,9 @@ If everything works as expected, you may enable the service upon system boot:
 
 `systemctl transgram enable`
 
+## Basic Usage
+
+In groups and channels, you will need to use the reply function to answer incoming chat messages. This way, you can still have internal conversations in your group without the customer(s). In Supergroups, you can use the `/topic [name]` (or `/thread [name]`) command as an reply to spawn a new thread in which you can chat with the respective customer "normally", without the need of using the reply function. You can `/close` a thread, or use the `/topic` (or `/thread`) command again to create a new thread and close the old one (this may be useful whenever the topic of your conversation changes and you want to keep an overview).
 
 ## Message Types
 
@@ -160,13 +163,13 @@ The uploaded files are stored on the Transgram server. Note that this improves p
 Note that there is no authorization mechanism in place other than the filename itself, which is preceeded by a 16 digit alphanumerical part of the sha256 sum of the file, and contains the filename as saved on Telegram (e.g. "file-36") as well as the file ending (e.g. ".mp4"). This allows your support clients to share files, e.g. by sending the link to a file via Email, and protects files from visitors that do not know the filename. However, it _theoretically_ allows attackers to brute-force file names. Given 26 letters and 10 numbers, the likelyhood for a random guess is around n/36^16, with n being the number of stored files of a given type, given the Telegram filename and type is known to the attacker. Say you have 1 Million PNG images stored on your server, the likelyhood to find one of them in a random guess would then be around 0.0000000000000000126%, which is a percentage with 16 zeros after the dot and considered "basically zero". However, just be aware that files are not "private" by any means, and you may as well want to raise awareness on the clientside about this fact.
 
 ## Chat Types
-### private chat
+### Groups
 This chat type only offers most basic features (sending/receiving messages and files)
 
-### channel chat
+### Channels
 Channels support message editing and thus allow transgram to display an indicator whether a message was transmitted or not (e.g. chat partner closed website).
 
-### forum chat
+### Forum (Supergroup)
 Forums come with the option to create "threads", thus enabling transgram to manage multiple simultaneous chats in different sub-threads. Unless you are only testing or urgently need the message indicators supported only in channel chats, we recommend you start your bot in this type of chat.
 
 ## Upload Error codes
