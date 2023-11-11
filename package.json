@@ -1,7 +1,7 @@
 {
   "name": "vite-starter",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "scripts": {
     "doc": "jsdoc -c jsdoc.json",
     "dev": "sh scripts/dotenv_run.sh nodemon src/server/main.mjs -w src/server",

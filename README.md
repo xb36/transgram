@@ -1,5 +1,5 @@
 # About
-Transgram is a Telegram Chat Widget for your Homepage! It allows you to forward messages from the widget to your Telegram App and vice-versa, thus enabling you to communicate with your website visitors "on the fly" (or on the walk, that is).
+Transgram is a fully customizable Telegram Chat Widget for your Website! It allows you to forward messages from the widget to your Telegram App and vice-versa, thus enabling you to communicate with your website visitors "on the fly" (or on the walk, that is).
 
 ![Gif showcasing the app](https://github.com/xb36/transgram/blob/main/showcase.gif?raw=true)
 
