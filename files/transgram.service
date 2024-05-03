@@ -1,0 +1,13 @@
+[Unit]
+Description=Transgram Server
+
+[Service]
+ExecStart=<NPM_PATH> run start
+Restart=always
+User=<USER>
+# Note Debian/Ubuntu uses 'nogroup', RHEL/Fedora uses 'nobody'
+Group=nogroup
+WorkingDirectory=<HOME_PATH>/transgram
+
+[Install]
+WantedBy=multi-user.target
