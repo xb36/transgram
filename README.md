@@ -3,60 +3,178 @@ Transgram is a fully customizable Telegram Chat Widget for your Website! It allo
 
 ![Gif showcasing the app](https://github.com/xb36/transgram/blob/main/showcase.gif?raw=true)
 
-Note that this is an early version and may (will) include bugs. Please report any issue you have (and feel welcome to create a pull request) as this helps alot with maintaining the code. Please read this document very carefully.
-
 ## Installation
 
-### Prerequisits
-- OS: Linux (preferrably debian)
-- Software:
-- 	- node (minimum v16, latest Version recommended)
-	- ffmpeg (for fetching file information)
-	- Webserver
+Transgram requires you to have *
 
-(Note that transgram is designed to run on HTTP behind a HTTPS reverse proxy. However there is an option to run it on HTTPS directly.)
+**Required packages:**
+- nodejs npm git
+
+**Optional packages**
+- ffmpeg
+- - Required to detect correct filetypes
+- apache2
+- - for the reverse proxy
+- certbot
+- - for the [apache] SSL certificate
+
+```bash
+# example for debian based distributions
+apt install apache2 nodejs npm git -y
+apt install ffmpeg -y
+apt install certbot python3-certbot-apache -y
+```
+
+Create the unpriviledged system user with $HOME at `/opt/transgram` (use the `-M` option).
+```bash
+useradd -s /usr/sbin/nologin -d /opt/transgram -M transgram
+```
+ Let `git` create the directory and give ownership to our user.
+```bash
+cd /opt
+git clone https://github.com/xb36/transgram.git
+chown transgram:transgram /opt/transgram -R
+```
+Configure transgram (`/opt/transgram/.env`):
+```bash
+echo "SECRET_KEY=$(openssl rand -hex 16) >> /opt/transgram/.env
+```
+```bash
+SECRET_KEY=**<the generated secret>**
+TELEGRAM_API_TOKEN=**<telegram bot API token>**
+HOST=https://**<your domain>**
+PUBLIC_PORT=8443
+PROXY_PORT=3333
+ALLOWED_ORIGINS=*
+```
+Copy apache2 configuration
+```bash
+systemctl stop apache2
+cp /opt/transgram/files/transgram.service /etc/systemd/system/transgram.service
+```
+Configure apache2 (/etc/apache2/sites-available/transgram.conf):
+```
+Listen 8443
+<VirtualHost **<YOUR_DOMAIN>**:8443>
+
+ ServerName **<YOUR_DOMAIN>**
+
+ ## SSL ...
+ SSLEngine on
+ SSLCertificateFile /etc/letsencrypt/live/**<YOUR_DOMAIN>**/fullchain.pem
+ SSLCertificateKeyFile /etc/letsencrypt/live/**<YOUR_DOMAIN>**/privkey.pem
+ Include /etc/letsencrypt/options-ssl-apache.conf
+
+ ## logging
+ ErrorLog ${APACHE_LOG_DIR}/transgram/error.log
+ CustomLog ${APACHE_LOG_DIR}/transgram/access.log combined
+
+ # Don't act as a forward proxy
+ ProxyRequests Off
+
+ # forward requests to proxy =>
+ ProxyPreserveHost On
+
+ <Location "/">
+  SetEnvIf Origin ".+" TmpOrig=$0
+  RequestHeader set Origin %{TmpOrig}e env=TmpOrig
+
+  SetEnvIf Access-Control-Request-Headers ".+" TmpReqHead=$0
+  RequestHeader set Access-Control-Request-Headers %{TmpReqHead}e env={TmpReqHead}
+
+  SetEnvIf Access-Control-Request-Method ".+" TmpReqMeth=$0
+  RequestHeader set Access-Control-Request-Method %{TmpReqMeth}e env={TmpReqMeth}
+
+  ProxyPass "http://localhost:3333/"
+  ProxyPassReverse "http://localhost:3333/"
+ </Location>
+
+ ProxyRequest Off # not necessary to turn ProxyRequests on in order to configure the reverse proxy.
+ 
+ # forward socket.io requests =>
+ RewriteEngine on
+ RewriteCond %{HTTP:Upgrade} websocket [NC]
+ RewriteCond %{HTTP:Connection} upgrade [NC]
+ # for socket.io =>
+ RewriteRule /socket.io/(.*) ws://localhost:<PROXY_PORT>/socket.io/$1 [P,L]
+
+ ## Required headers for CORS
+ # crucial CORS-related header that indicates the origin of requesting domain
+ # RequestHeader set Origin %{ORIGIN}e
+
+ # used in CORS preflight requests to indicate the HTTP method
+ RequestHeader set Access-Control-Request-Method "%{REQUEST_METHOD}e"
+
+ # used in CORS preflight requests to indicate the requested headers
+ RequestHeader set Access-Control-Request-Headers "%{HTTP_ACCESS_CONTROL_REQUEST_HEADERS}e"
+</VirtualHost>
+```
+Then, enable the site by running
+```bash
+a2ensite transgram
+```
+We are ready now to build the app:
+```bash
+cd /opt/transgram
+sudo -u transgram npm install
+sudo -u transgram npm run build
+```
+If you want a systemd service, write the following content to `/etc/systemd/transgram.service`:
+```
+[Unit]
+Description=Transgram Server
+
+[Service]
+ExecStart=/usr/bin/npm run start
+Restart=always
+User=transgram
+# Note Debian/Ubuntu uses 'nogroup', RHEL/Fedora uses 'nobody'
+Group=nogroup
+WorkingDirectory=/opt/transgram
+[Install]
+WantedBy=multi-user.target
+```
+
+Now start the server and the reverse proxy:
+```bash
+systemctl start transgram
+systemctl start apache2
+```
+If everything works as expected, you may enable the service upon system boot:
+```
+systemctl transgram enable
+```
+
+If both services are running, it's a good time to activate the webhook by issuing the following command (you may as well simply open the resulting URL in a webbrowser):
+```bash
+wget -O - https://api.telegram.org/bot**<YOUR_API_TOKEN>**/setWebhook?url=https://**<YOUR_DOMAIN_NAME**/hook
+```
+If everything worked, you can now invite the bot to a group chat. The bot will automatically send a message upon invitation including the groups chat_id. We need to add the ID to `/opt/transgram/src/server/server_configuration.mjs
+```bash
+# ...
+transgram_chat_id: 0/**<TRANSGRAM_CHAT_ID>**/,
+# ...
+```
+Finally, restart transgram. 
+
 
 ### Telegram Bot Setup
-First thing you need is a [telegram bot](https://core.telegram.org/bots). You can follow these simple steps:
-1. Search for "BotFather" in your Telegram app. Make sure you select the correct one, with a "verified" symbol, as there are many fake duplicates that try to steal your data.
 
+Also see [telegram bot](https://core.telegram.org/bots).
+1. Search for "BotFather" in your Telegram app.
    ![Image showing telegram search](https://github.com/xb36/transgram/blob/main/BotFather_screenshot.png?raw=true)
-
 2. Enter `/start` (or click on "START")
 3. Enter `/newbot` to create a new Bot
 	3.1. Enter any name for your bot
 	3.2. Choose a username for your bot. Note that ist _must_ end in 'bot'.
-4. BotFather will give you the HTTP API token that you will need to setup the transgram server. Make sure to keep it a secret!
+4. BotFather will give you the HTTP API token that you will need to setup the transgram server.
 
-### Basic Server Setup
+### The .env file
 
-Clone this repository to any location on your server.
+**Important:** Transgram uses a custom built dotenv-like parser. Read `/opt/transgram/.env-example` for more information.
 
-`git clone https://github.com/xb36/transgram.git`
-
-edit `.env-example` and rename to `.env`
-
-CAUTION: Transgram uses a custom built dotenv-like parser. Make sure to read the .env file comments __very carefully__ and set the appropriate values. This is also where you will copy the Telegram HTTP API token generated in the previous step.
-
-Before you can build the package, you may want to take a look at `./src/client/client_configuration.js` as well as `./src/server/server_configuration.mjs` and change any default values. If you change any values in this file later, you will need to re-build transgram with the commands below. Note that you will also be able to change the client configuration options from the embedding client without the need to rebuild. The server configuraiton options can only be changed in the respective file, however you will not need to rebuild the project, just restart the server.
-
-Install dependencies and package the build to start it like so:
-
-`npm install`
-
-`npm run build`
-
-`npm run start`
-
-If everything worked, you should see a message stating that the server is listening on the specified port.
-
-![Image showing success message](https://github.com/xb36/transgram/blob/main/run_start_screenshot.png?raw=true)
-
-### Reverse Proxy Setup
-
-Depending on your Webserver, the required steps to configure the reverse proxy differ. In summary, you will need to forward http as well as websocket connections and make sure that files up to 10M (or whatever maximum file size you chose in the server configuration) are allowed.
-
-[This repository](https://github.com/xb36/transgram-reverse-proxy) consists of an example configuration file for apache2 using letsencrypt certificates.
+### Changing client configuration
+You find the client configuration file at `/opt/transgram/src/client/client_configuration`. However, I recommend you to set the values on the client server which embeds the chat widget.
 
 ### Embedding Client Setup
 Transgram was build with user experience on the client side in mind. Thus, embedding the widget on your page is very straight forward:
@@ -72,72 +190,6 @@ Transgram was build with user experience on the client side in mind. Thus, embed
 <script id="transgram" type="module" src="https://<YOUR_DOMAIN>/widget.js"></script>
 
 ```
-
-Note that while it is common that widgets get included via a frame, I chose to do it differently and include it directly on the page. _That has certain implications on how to apply e.g. styles and HTML element ids._
-
-### Connect Transgram <-> Telegram Bot
-
-The last step that is required is to retrieve the Transgram Chat ID and set the respective configuration parameter in `server_configuration.mjs`:
-
-1. Create a Group, a Supergroup or a Channel and invite the Transgram Bot you created earlier (See below for differences in chat types)
-2. The bot will send a message containing your Transgram Chat ID. Note that this ID will change when you create a new group or upgrade your group (to a supergroup).
-3. Add your transgram_chat_id to `server_configuration.mjs` and restart the server.
-
-That is it, really!
-
-### Running Background Process 
-
-#### Using PM2
-
-Transgram installes pm2, a node process manager. It is an easy way to start and stop the app, e.g. using a command like:
-
-__Note: The following commands may require you to be in the transgram root folder (e.g. `/var/www/transgram`). Also, it is highly recommended to run the server as an unprivileged user!__
-
-Starting the service:
-
-`node_modules/.bin/pm2 start npm -- start`
-
-List current processes:
-
-`node_modules/.bin/pm2 list`
-
-Stop a process:
-
-`node_modules/.bin/pm2 stop <id>`
-
-Show STDOUT:
-
-`node_modules/.bin/pm2 log <id>`
-
-You may also use the `pm2 startup` command to run commands on system boot. For more information, see the pm2 documentation on [persistent application](https://pm2.keymetrics.io/docs/usage/startup/). pm2 comes with some grat features for monitoring as well, and definetly is worth a look.
-
-#### Using Systemd
-
-If you prefer a systemd service, create (as root) the file `transgram.service` in `/etc/systemd/system/`. The following example demonstrates how this file could look like (adjust values as required):
-
-```
-[Unit]
-Description=Transgram Server
-
-[Service]
-ExecStart=/home/transgram/.nvm/versions/node/v20.2.0/bin/npm run start # use full path to node executable
-Restart=always
-User=transgram
-# Note Debian/Ubuntu uses 'nogroup', RHEL/Fedora uses 'nobody'
-Group=nogroup
-WorkingDirectory=/var/www/transgram
-
-[Install]
-WantedBy=multi-user.target
-```  
-
-Now, start the service. Run (as root):
-
-`systemctl transgram start`
-
-If everything works as expected, you may enable the service upon system boot:
-
-`systemctl transgram enable`
 
 ## Basic Usage
 
@@ -158,9 +210,9 @@ The following type of media is not supported at the moment:
 
 ### Security Implications
 
-The uploaded files are stored on the Transgram server. Note that this improves privacy as opposed to fetching the file from the Telegram servers every time the client (re)connects. It as well allows deletion of files on one side without affecting the other.
+The uploaded files are stored on your Transgram server. Note that this improves privacy as opposed to fetching the file from the Telegram servers every time the client (re)connects. It as well allows deletion of files on one side without affecting the other.
 
-Note that there is no authorization mechanism in place other than the filename itself, which is preceeded by a 16 digit alphanumerical part of the sha256 sum of the file, and contains the filename as saved on Telegram (e.g. "file-36") as well as the file ending (e.g. ".mp4"). This allows your support clients to share files, e.g. by sending the link to a file via Email, and protects files from visitors that do not know the filename. However, it _theoretically_ allows attackers to brute-force file names. Given 26 letters and 10 numbers, the likelyhood for a random guess is around n/36^16, with n being the number of stored files of a given type, given the Telegram filename and type is known to the attacker. Say you have 1 Million PNG images stored on your server, the likelyhood to find one of them in a random guess would then be around 0.0000000000000000126%, which is a percentage with 16 zeros after the dot and considered "basically zero". However, just be aware that files are not "private" by any means, and you may as well want to raise awareness on the clientside about this fact.
+Note, howver, that there is no authorization mechanism in place other than the filename itself, which is preceeded by a 16 digit alphanumerical part of the sha256 sum of the file, and contains the filename as saved on Telegram (e.g. "file-36") as well as the file ending (e.g. ".mp4"). This allows your support clients to share files, e.g. by sending the link to a file via Email, and protects files from visitors that do not know the filename. Given 26 letters and 10 numbers, the likelyhood for a random guess is around n/36^16, Say you have 1 Million PNG images stored on your server, the likelyhood to find one of them in a random guess would then be around 0.0000000000000000126%, which is a percentage with 16 zeros after the dot and considered "basically zero". However, just be aware that files are not "private" by default, and you may as well want to raise awareness on the clientside about this fact.
 
 ## Chat Types
 ### Groups
