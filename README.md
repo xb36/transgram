@@ -18,6 +18,8 @@ Transgram requires you to have *
 - certbot
 - - for the [apache] SSL certificate
 
+**Before you start, create a bot to retrieve a HTTP API token !**
+
 ```bash
 # example for debian based distributions
 apt install apache2 nodejs npm git -y
@@ -33,11 +35,11 @@ useradd -s /usr/sbin/nologin -d /opt/transgram -M transgram
 ```bash
 cd /opt
 git clone https://github.com/xb36/transgram.git
-chown transgram:transgram /opt/transgram -R
+chown transgram /opt/transgram -R
 ```
 Configure transgram (`/opt/transgram/.env`):
 ```bash
-echo "SECRET_KEY=$(openssl rand -hex 16) >> /opt/transgram/.env
+echo "SECRET_KEY=$(openssl rand -hex 16)" >> /opt/transgram/.env
 ```
 ```bash
 SECRET_KEY=**<the generated secret>**
@@ -61,66 +63,11 @@ mkdir /var/log/apache2/transgram
 ```
 Copy apache2 configuration
 ```bash
-systemctl stop apache2
 cp /opt/transgram/files/transgram.conf /etc/apache2/sites-available/
 ```
 Configure apache2 (/etc/apache2/sites-available/transgram.conf):
-```
-Listen **<PUBLIC_PORT>**
-<VirtualHost **<YOUR_DOMAIN>**:**<PUBLIC_PORT>**>
+Replace all occurences of `<PUBLIC_PORT>`, `<YOUR_DOMAIN>` and `<PROXY_PORT>` with the appropriate values.
 
- ServerName **<YOUR_DOMAIN>**
-
- ## SSL ...
- SSLEngine on
- SSLCertificateFile /etc/letsencrypt/live/**<YOUR_DOMAIN>**/fullchain.pem
- SSLCertificateKeyFile /etc/letsencrypt/live/**<YOUR_DOMAIN>**/privkey.pem
- Include /etc/letsencrypt/options-ssl-apache.conf
-
- ## logging
- ErrorLog ${APACHE_LOG_DIR}/transgram/error.log
- CustomLog ${APACHE_LOG_DIR}/transgram/access.log combined
-
- # Don't act as a forward proxy
- ProxyRequests Off
-
- # forward requests to proxy =>
- ProxyPreserveHost On
-
- <Location "/">
-  SetEnvIf Origin ".+" TmpOrig=$0
-  RequestHeader set Origin %{TmpOrig}e env=TmpOrig
-
-  SetEnvIf Access-Control-Request-Headers ".+" TmpReqHead=$0
-  RequestHeader set Access-Control-Request-Headers %{TmpReqHead}e env={TmpReqHead}
-
-  SetEnvIf Access-Control-Request-Method ".+" TmpReqMeth=$0
-  RequestHeader set Access-Control-Request-Method %{TmpReqMeth}e env={TmpReqMeth}
-
-  ProxyPass "http://localhost:3333/"
-  ProxyPassReverse "http://localhost:3333/"
- </Location>
-
- ProxyRequest Off # not necessary to turn ProxyRequests on in order to configure the reverse proxy.
- 
- # forward socket.io requests =>
- RewriteEngine on
- RewriteCond %{HTTP:Upgrade} websocket [NC]
- RewriteCond %{HTTP:Connection} upgrade [NC]
- # for socket.io =>
- RewriteRule /socket.io/(.*) ws://localhost:<PROXY_PORT>/socket.io/$1 [P,L]
-
- ## Required headers for CORS
- # crucial CORS-related header that indicates the origin of requesting domain
- # RequestHeader set Origin %{ORIGIN}e
-
- # used in CORS preflight requests to indicate the HTTP method
- RequestHeader set Access-Control-Request-Method "%{REQUEST_METHOD}e"
-
- # used in CORS preflight requests to indicate the requested headers
- RequestHeader set Access-Control-Request-Headers "%{HTTP_ACCESS_CONTROL_REQUEST_HEADERS}e"
-</VirtualHost>
-```
 Then, enable the site by running
 ```bash
 a2ensite transgram
@@ -131,22 +78,10 @@ cd /opt/transgram
 sudo -u transgram npm install
 sudo -u transgram npm run build
 ```
-If you want a systemd service, write the following content to `/etc/systemd/transgram.service`:
+If you want a systemd service, copy the appropriate file to the correct location and once again substitute the placeholder values.
 
-```
-[Unit]
-Description=Transgram Server
-
-[Service]
-ExecStart=**<NPM_PATH>** run start
-Restart=always
-User=**<USER>**
-# Note Debian/Ubuntu uses 'nogroup', RHEL/Fedora uses 'nobody'
-Group=nogroup
-WorkingDirectory=**<HOME_PATH>**/transgram
-
-[Install]
-WantedBy=multi-user.target
+```bash
+cp /opt/transgram/files/transgram.service /etc/systemd/system/
 ```
 
 Now start the server and the reverse proxy:
