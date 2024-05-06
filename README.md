@@ -47,15 +47,27 @@ PUBLIC_PORT=8443
 PROXY_PORT=3333
 ALLOWED_ORIGINS=*
 ```
+Obtain certbot certificates
+```bash
+certbot certonly --apache -n --agree-tos --email **<YOUR_EMAIL>** -d **<YOUR_DOMAIN>**
+```
+Enable apache2 plugins
+```bash
+a2enmod ssl proxy proxy_http proxy_wstunnel rewrite headers
+```
+Create dedicated log folder
+```bash
+mkdir /var/log/apache2/transgram
+```
 Copy apache2 configuration
 ```bash
 systemctl stop apache2
-cp /opt/transgram/files/transgram.service /etc/systemd/system/transgram.service
+cp /opt/transgram/files/transgram.conf /etc/apache2/sites-available/
 ```
 Configure apache2 (/etc/apache2/sites-available/transgram.conf):
 ```
-Listen 8443
-<VirtualHost **<YOUR_DOMAIN>**:8443>
+Listen **<PUBLIC_PORT>**
+<VirtualHost **<YOUR_DOMAIN>**:**<PUBLIC_PORT>**>
 
  ServerName **<YOUR_DOMAIN>**
 
@@ -120,17 +132,19 @@ sudo -u transgram npm install
 sudo -u transgram npm run build
 ```
 If you want a systemd service, write the following content to `/etc/systemd/transgram.service`:
+
 ```
 [Unit]
 Description=Transgram Server
 
 [Service]
-ExecStart=/usr/bin/npm run start
+ExecStart=**<NPM_PATH>** run start
 Restart=always
-User=transgram
+User=**<USER>**
 # Note Debian/Ubuntu uses 'nogroup', RHEL/Fedora uses 'nobody'
 Group=nogroup
-WorkingDirectory=/opt/transgram
+WorkingDirectory=**<HOME_PATH>**/transgram
+
 [Install]
 WantedBy=multi-user.target
 ```
