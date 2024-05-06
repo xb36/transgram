@@ -45,8 +45,8 @@ echo "SECRET_KEY=$(openssl rand -hex 16)" >> /opt/transgram/.env
 SECRET_KEY=**<the generated secret>**
 TELEGRAM_API_TOKEN=**<telegram bot API token>**
 HOST=https://**<your domain>**
-PUBLIC_PORT=8443
-PROXY_PORT=3333
+PUBLIC_PORT=**<PUBLIC_PORT>**
+PORT=**<PROXY_PORT>**
 ALLOWED_ORIGINS=*
 ```
 Obtain certbot certificates
@@ -91,7 +91,7 @@ systemctl start apache2
 ```
 If everything works as expected, you may enable the service upon system boot:
 ```
-systemctl transgram enable
+systemctl enable transgram 
 ```
 
 If both services are running, it's a good time to activate the webhook by issuing the following command (you may as well simply open the resulting URL in a webbrowser):
